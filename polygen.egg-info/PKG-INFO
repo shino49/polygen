@@ -1,14 +1,12 @@
-Metadata-Version: 1.2
+Metadata-Version: 2.1
 Name: polygen
 Version: 0.1.0
 Summary: Package to access polygen modules
-Home-page: UNKNOWN
+Home-page: 
 Author: Anshul Ahluwalia
 Author-email: 
 License: APACHE
-Description: UNKNOWN
 Keywords: computer-vision
-Platform: UNKNOWN
 Classifier: Development Status :: 5 - Production/Stable
 Classifier: Intended Audience :: Developers
 Classifier: License :: OSI Approved :: APACHE License

@@ -1,6 +1,6 @@
 FaceModelConfig:
   _target_: polygen.polygen_config.FaceModelConfig
-  accelerator: "ddp"
+  accelerator: "auto"
   dataset_path: "/coc/scratch/aahluwalia30/shapenet/shapenetcore/shapenet-lite-class-conditional"
   batch_size: 12
   training_split: 0.80

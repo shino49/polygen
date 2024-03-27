@@ -1,7 +1,7 @@
 VertexModelConfig:
   _target_: polygen.polygen_config.VertexModelConfig
-  accelerator: ddp
-  dataset_path: "/coc/scratch/aahluwalia30/shapenet/shapenetcore/shapenet-lite/"
+  accelerator: auto
+  dataset_path: "D:/AssetsLib/polygen_data/"
   batch_size: 12
   training_split: 0.80
   val_split: 0.10

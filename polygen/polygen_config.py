@@ -92,6 +92,7 @@ class VertexModelConfig:
             quantization_bits=quantization_bits,
             use_image_dataset = image_model,
             apply_random_shift_vertices=apply_random_shift,
+            img_extension="png",
         )
 
         self.training_steps = training_steps
@@ -159,6 +160,7 @@ class FaceModelConfig:
             quantization_bits = quantization_bits,
             apply_random_shift_faces = apply_random_shift,
             shuffle_vertices = shuffle_vertices,
+            img_extension="png"
         )
 
         self.face_model = FaceModel(

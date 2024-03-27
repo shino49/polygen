@@ -5,6 +5,7 @@ import pdb
 import random
 from typing import List, Dict, Optional
 
+import numpy as np
 import torch
 import torch.nn.functional as F
 from torch.utils.data import Dataset, DataLoader, random_split
@@ -16,6 +17,21 @@ from PIL import Image
 
 import polygen.utils.data_utils as data_utils
 
+from stl import mesh
+
+def my_load_model(file_path: str) -> tuple[torch.Tensor, torch.Tensor, torch.Tensor]:
+    if file_path.endswith(".obj"):
+        return load_obj(file_path)
+    elif file_path.endswith(".stl"):
+        stl_mesh = mesh.Mesh.from_file(file_path)
+        vertices = stl_mesh.vectors.reshape(-1, 3)
+        v_array, t_array = np.unique(vertices, return_inverse=True, axis=0)
+        t_array = t_array.reshape(-1, 3)
+        v = torch.tensor(v_array, dtype=torch.float32)
+        f = torch.tensor(t_array, dtype=torch.int32)
+        v = v - v.mean(0)
+        v /= max(v.abs().max(0)[0])
+        return v, f, torch.tensor([])
 
 class ShapenetDataset(Dataset):
     def __init__(
@@ -24,6 +40,7 @@ class ShapenetDataset(Dataset):
         default_shapenet: bool = True,
         all_files: Optional[List[str]] = None,
         label_dict: Dict[str, int] = None,
+        model_extension: str = "obj",
     ) -> None:
         """
         Args:
@@ -31,8 +48,9 @@ class ShapenetDataset(Dataset):
         """
         self.training_dir = training_dir
         self.default_shapenet = default_shapenet
+        self.model_extension = model_extension
         if default_shapenet:
-            self.all_files = glob.glob(f"{self.training_dir}/*/*/models/model_normalized.obj")
+            self.all_files = [f.replace("\\", "/") for f in glob.glob(f"{self.training_dir}/*/*/models/model_normalized.{self.model_extension}")]
             self.label_dict = {}
             for i, class_label in enumerate(os.listdir(training_dir)):
                 self.label_dict[class_label] = i
@@ -52,7 +70,7 @@ class ShapenetDataset(Dataset):
             mesh_dict: Dictionary containing vertices, faces and class label
         """
         mesh_file = self.all_files[idx]
-        vertices, faces, _ = load_obj(mesh_file)
+        vertices, faces, _ = my_load_model(mesh_file)
         faces = faces.verts_idx
         vertices = vertices[:, [2, 0, 1]]
         vertices = data_utils.center_vertices(vertices)
@@ -70,7 +88,7 @@ class ShapenetDataset(Dataset):
 
 
 class ImageDataset(Dataset):
-    def __init__(self, training_dir: str, image_extension: str = "jpeg") -> None:
+    def __init__(self, training_dir: str, image_extension: str = "jpeg", model_extension: str = "obj") -> None:
         """Initializes Image Dataset
 
         Args:
@@ -78,7 +96,10 @@ class ImageDataset(Dataset):
             image_extension: Whether it's a .png or .jpeg or other type of file
         """
         self.training_dir = training_dir
-        self.images = glob.glob(f"{self.training_dir}/*/*/renderings/*.{image_extension}")
+        self.images = [f.replace("\\","/") for f in glob.glob("D:/AssetsLib/polygen_data/*/*/renderings/*.png")]
+        for i in range(len(self.images)):
+            self.images[i] = self.images[i].replace("\\", "/")
+        self.model_extension = model_extension
 
         self.transforms = T.Compose([T.ToTensor(), T.Resize((256))])
 
@@ -97,8 +118,8 @@ class ImageDataset(Dataset):
         """
         img_file = self.images[idx]
         folder_path = "/".join(img_file.split("/")[:-2])
-        model_file = os.path.sep.join([folder_path, "models", "model_normalized.obj"])
-        verts, faces, _ = load_obj(model_file)
+        model_file = "/".join([folder_path, "models", f"model_normalized.{self.model_extension}"])
+        verts, faces, _ = my_load_model(model_file)
         faces = faces.verts_idx
         verts = verts[:, [2, 0, 1]]
         vertices = data_utils.center_vertices(verts)
@@ -134,6 +155,7 @@ class PolygenDataModule(pl.LightningDataModule):
         apply_random_shift_vertices: bool = True,
         apply_random_shift_faces: bool = True,
         shuffle_vertices: bool = True,
+        model_extension: str = "obj",
     ) -> None:
         """
         Args:
@@ -164,13 +186,14 @@ class PolygenDataModule(pl.LightningDataModule):
         self.batch_size = batch_size
 
         if use_image_dataset:
-            self.shapenet_dataset = ImageDataset(training_dir=self.data_dir, image_extension=img_extension)
+            self.shapenet_dataset = ImageDataset(training_dir=self.data_dir, image_extension=img_extension, model_extension=model_extension)
         else:
             self.shapenet_dataset = ShapenetDataset(
                 self.data_dir,
                 default_shapenet=default_shapenet,
                 all_files=all_files,
                 label_dict=label_dict,
+                model_extension=model_extension,
             )
 
         self.training_split = training_split
@@ -269,7 +292,7 @@ class PolygenDataModule(pl.LightningDataModule):
             curr_verts = data_utils.dequantize_verts(vertices, self.quantization_bits)
             face_vertices[i] = F.pad(curr_verts, [0, 0, 0, vertex_padding_size])
             face_vertices_mask[i] = torch.zeros_like(face_vertices[i][..., 0], dtype=torch.float32)
-            face_vertices_mask[i, :num_vertices] = 1
+            face_vertices_mask[i, :num_vertices] = 1 # ??
             faces_mask[i] = torch.zeros_like(shuffled_faces[i], dtype=torch.float32)
             faces_mask[i, : initial_faces_size + 1] = 1
         face_model_batch["faces"] = shuffled_faces
@@ -320,7 +343,7 @@ class PolygenDataModule(pl.LightningDataModule):
         img_vertex_model_batch["image"] = images
         return img_vertex_model_batch
 
-    def setup(self, stage: Optional = None) -> None:
+    def setup(self, stage: Optional[str] = None) -> None:
         """Pytorch Lightning Data Module setup method"""
         num_files = len(self.shapenet_dataset)
         train_set_length = int(num_files * self.training_split)

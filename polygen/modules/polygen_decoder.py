@@ -88,14 +88,14 @@ class PolygenDecoderLayer(nn.TransformerDecoderLayer):
             key = tgt
             value = tgt
         tgt2 = self.norm1(tgt)
-        tgt2 = self.self_attn(tgt, key, value, attn_mask=tgt_mask, key_padding_mask=tgt_key_padding_mask)[0]
+        tgt2 = self.self_attn(tgt2, key, value, attn_mask=tgt_mask, key_padding_mask=tgt_key_padding_mask)[0] # fix tgt to tgt2
         if self.re_zero:
             tgt2 = tgt2 * self.alpha
         tgt = tgt + self.dropout1(tgt2)
         if memory is not None:
             tgt2 = self.norm2(tgt)
             tgt2 = self.multihead_attn(
-                tgt,
+                tgt2, # fix tgt to tgt2
                 memory.float(),
                 memory.float(),
                 attn_mask=memory_mask,
