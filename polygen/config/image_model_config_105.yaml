@@ -1,6 +1,6 @@
 VertexModelConfig:
   _target_: polygen.polygen_config.VertexModelConfig
-  accelerator: auto
+  accelerator: gpu
   dataset_path: "D:/AssetsLib/polygen_data/"
   batch_size: 12
   training_split: 0.80

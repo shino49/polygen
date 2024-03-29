@@ -22,7 +22,7 @@ def main() -> None:
 
     trainer = pl.Trainer(
         accelerator=face_model_config.accelerator,
-        gpus=face_model_config.num_gpus,
+        devices=1,
         max_epochs=num_epochs,
     )
     trainer.fit(face_model, face_data_module)

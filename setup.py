@@ -1,13 +1,4 @@
 #!/usr/bin/env python
-
-"""
-Ref: https://github.com/argoai/argoverse-api/blob/master/setup.py
-A setuptools based setup module.
-See:
-https://packaging.python.org/en/latest/distributing.html
-https://github.com/pypa/sampleproject
-"""
-
 from codecs import open  # To use a consistent encoding
 from os import path
 

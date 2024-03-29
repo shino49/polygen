@@ -456,7 +456,7 @@ class ImageToVertexModel(VertexModel):
         processed_image_resolution = image_embeddings.shape[1:3]
         x = torch.linspace(-1, 1, processed_image_resolution[0], device=self.device)
         y = torch.linspace(-1, 1, processed_image_resolution[1], device=self.device)
-        image_coords = torch.stack(torch.meshgrid(x, y), dim=-1)
+        image_coords = torch.stack(torch.meshgrid(x, y, indexing="ij"), dim=-1)
         image_coord_embeddings = self.embedder(image_coords)
         image_embeddings = image_embeddings + image_coord_embeddings[None]
         batch_size = image_embeddings.shape[0]

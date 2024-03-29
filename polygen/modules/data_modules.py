@@ -50,7 +50,7 @@ class ShapenetDataset(Dataset):
         self.default_shapenet = default_shapenet
         self.model_extension = model_extension
         if default_shapenet:
-            self.all_files = [f.replace("\\", "/") for f in glob.glob(f"{self.training_dir}/*/*/models/model_normalized.{self.model_extension}")]
+            self.all_files = [f.replace("\\", "/") for f in glob.glob(f"{self.training_dir}*/*/models/model_normalized.{self.model_extension}")]
             self.label_dict = {}
             for i, class_label in enumerate(os.listdir(training_dir)):
                 self.label_dict[class_label] = i
@@ -96,9 +96,7 @@ class ImageDataset(Dataset):
             image_extension: Whether it's a .png or .jpeg or other type of file
         """
         self.training_dir = training_dir
-        self.images = [f.replace("\\","/") for f in glob.glob("D:/AssetsLib/polygen_data/*/*/renderings/*.png")]
-        for i in range(len(self.images)):
-            self.images[i] = self.images[i].replace("\\", "/")
+        self.images = [f.replace("\\","/") for f in glob.glob(f"{self.training_dir}*/*/renderings/*.png")]
         self.model_extension = model_extension
 
         self.transforms = T.Compose([T.ToTensor(), T.Resize((256))])

@@ -24,7 +24,7 @@ def main(config_name: str) -> None:
 
     trainer = pl.Trainer(
         accelerator=vertex_model_config.accelerator,
-        gpus=vertex_model_config.num_gpus,
+        devices=1,
         max_epochs=num_epochs,
     )
     trainer.fit(model=vertex_model, datamodule=vertex_data_module)
